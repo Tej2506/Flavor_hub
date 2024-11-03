@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 #app.py
 
-
 # Remote library imports
 from flask import Flask, request, jsonify, make_response, session
 from flask_restful import Resource
-from bs4 import BeautifulSoup
 import requests
 import os
 
 # Local imports
 from config import app, db, api, bcrypt, CORS  # bcrypt imported from config
-from models import User, Car, Feature, Comparison  # Import your models
+from models import User, Dish, Recipe, Tag, Comment, Rating  # Import your models
 
 # Views go here!
+app.secret_key = b'\x11\x16\x83\xfee\x97\x0e\xd5Y5:FR+\xb1\\'
 
 class SignupResource(Resource):
     def post(self):
@@ -42,6 +41,7 @@ class LoginResource(Resource):
         if user:
             if user.authenticate(data['password']):
                 session['user_id'] = user.id
+                print(session.get('user_id'))
                 return make_response({'user_id': user.id}, 200)
             else:
                 return make_response({'message':'Incorrect password, try again'},201)
@@ -81,50 +81,241 @@ class UserProfileResource(Resource):
             'total_dishes': total_dishes,
             'public_dishes': public_dishes
         }
-        return make_response(user_data.to_dict(), 200)
+        return make_response(user_data, 200)
 
 class AllDishesRecipes(Resource):
     def get(self):
         user_id = session.get('user_id')
+        print('Session id:',user_id)
         if not user_id:
              return make_response({'message': 'User not logged in'}, 401)
         
-        dishes = Recipe.query.filter_by(user_id = user_id).all()
-        if dishes:
-            all_dishes=[]
-            for dish in dishes:
-                comments_data = []
-                for comment in dish.recipe.comments:
-                    comment_data = {
-                        'username': comment.user.username,  # Access username through the user relationship
+        recipes = Recipe.query.filter_by(user_id = user_id).all()
+        if recipes:
+            all_recipes=[]
+            for recipe in recipes:
+                comments = Comment.query.filter_by(recipe_id = recipe.id).all()
+                if comments:
+                    comments_data = [
+                        {
+                            'username': comment.user.username,
+                            'content': comment.content,
+                            'date': comment.date_created
+                        }
+                        for comment in comments
+                    ]
+                
+                recipe_data = {
+                'id': recipe.id,
+                'dish_name': recipe.dish.name,
+                'description': recipe.dish.description,
+                'ingredients': recipe.ingredients,
+                'instructions': recipe.instructions,
+                'cooking_time': recipe.cooking_time,
+                'servings': recipe.servings,
+                'image_url': recipe.image_url,
+                'date_created': recipe.date_created
+                }
+                if comments:
+                    recipe_data.update({'comments': comments_data})
+                all_recipes.append(recipe_data)
+            return make_response(jsonify(all_recipes), 200)
+        
+        return make_response({'message':'Please add your recipes'},201)
+
+    def post(self):
+        user_id = session.get('user_id')
+        print('Session user_id:',user_id)
+        if not user_id:
+            return make_response({'message':"user not logged in"},404)
+       
+        data = request.get_json()
+        dish = Dish.query.filter_by(name=data.get('name')).first()
+        if dish:
+            recipe = Recipe.query.filter_by(user_id=user_id).first()
+            if recipe:
+                return make_response({'message':'Dish already added in your profile'})
+            else:
+                recipe = Recipe(
+                    ingredients = data.get('ingredients'),
+                    instructions = data.get('instructions'),
+                    cooking_time = data.get('cooking_time') ,
+                    servings = data.get('servings'),
+                    image_url = data.get('image_url'),
+                    public = data.get('public'),
+                    dish_id = dish.id,
+                    user_id = user_id
+                )
+                db.session.add(recipe)
+                db.session.commit()
+                response ={
+                'id': recipe.id,
+                'dish_name': recipe.dish.name,
+                'description': recipe.dish.description,
+                'ingredients': recipe.ingredients,
+                'instructions': recipe.instructions,
+                'cooking_time': recipe.cooking_time,
+                'servings': recipe.servings,
+                'image_url': recipe.image_url,
+                'date_created': recipe.date_created
+                }
+                return make_response(response,200)
+
+        else:
+            dish = Dish(
+                name = data.get('name'),
+                description = data.get('description')
+                )
+            db.session.add(dish)
+            db.session.commit()
+            recipe = Recipe(
+                    ingredients = data.get('ingredients'),
+                    instructions = data.get('instructions'),
+                    cooking_time = data.get('cooking_time'),
+                    servings = data.get('servings'),
+                    image_url = data.get('image_url'),
+                    public = data.get('public'),
+                    user_id = user_id,
+                    dish_id = dish.id
+                )
+            db.session.add(recipe)
+            db.session.commit()
+            response = {
+                'id': recipe.id,
+                'dish_name': recipe.dish.name,
+                'ingredients': recipe.ingredients,
+                'description': recipe.dish.description,
+                'instructions': recipe.instructions,
+                'cooking_time': recipe.cooking_time,
+                'servings': recipe.servings,
+                'image_url': recipe.image_url,
+                'date_created': recipe.date_created
+                }
+            return make_response(response,200)
+
+    def patch(self):
+        user_id = session.get('user_id')
+        data = request.get_json()
+        
+        if not user_id:
+            return make_response({'message':'User not logged in'},404)
+       
+        recipe = Recipe.query.filter_by(id = data.get('id')).first()
+        if not recipe:
+            return make_response({'message': 'Recipe not found'}, 404)
+        for key, value in data.items():
+            setattr(recipe, key, value)
+        if data.get('name') != recipe.dish.name:
+            setattr(recipe.dish, 'name', data.get('name'))
+        if data.get('description') != recipe.dish.description:
+            setattr(recipe.dish, 'description', data.get('description'))
+        db.session.commit()
+        return make_response({'message': 'updated dishes'},200)
+
+class DeleteRecipe(Resource):
+    def post(self):
+        user_id = session.get('user_id')
+        if not user_id:
+            return make_response({'message':'error deleting'},404)
+        data = request.get_json()
+        recipe_to_delete = Recipe.query.filter_by(id = data.get('recipe_id')).first()
+        db.session.delete(recipe_to_delete)
+        db.session.commit()
+        return make_response({'message':'tile deleted successfully'},200)
+
+
+class PublicAllDishes(Resource):
+    def get(self):
+        user_id = session.get('user_id')
+        print("public feed user_id:",user_id)
+        if not user_id:
+            return make_response({'message': 'User not logged in'}, 401)
+        
+        recipes = Recipe.query.filter((Recipe.user_id != user_id) & (Recipe.public == True)).all()
+
+        if recipes:
+            all_recipes=[]
+            for recipe in recipes:
+                comments = Comment.query.filter_by(recipe_id = recipe.id).all()
+                comments_data = [
+                    {
+                        'username': comment.user.username,
                         'content': comment.content,
                         'date': comment.date_created
                     }
-                    comments_data.append(comment_data)
-                dish.to_dict()['comments'] = comments_data 
+                    for comment in comments
+                ]
 
-                all_dishes.append({**dish.to_dict(),'name':dish.dish_name})
-                
-            
-            return make_response(all_dishes,200)
+                recipe_data = {
+                'id': recipe.id,
+                'ingredients': recipe.ingredients,
+                'instructions': recipe.instructions,
+                'cooking_time': recipe.cooking_time,
+                'servings': recipe.servings,
+                'image_url': recipe.image_url,
+                'date_created': recipe.date_created
+                }
+                recipe_data.update({
+                    'dish_name': recipe.dish.name,
+                    'description': recipe.dish.description,
+                    'comments': comments_data
+                })
+
+                all_recipes.append(recipe_data)
+
+            return make_response(jsonify(all_recipes), 200)
         
         return make_response({'message':'No dishes added'},201)
 
+class AddComment(Resource):
+    def post(self):
+        user_id = session.get('user_id')
+        if not user_id:
+            return make_response({'message':'User not logged in'},404)
+
+        data = request.get_json()
+        username = User.query.filter_by(id = user_id).first().username
+        new_comment = Comment(
+            user_id = user_id,
+            recipe_id = data.get('recipe_id'),
+            content = data.get('comment')
+        )
+        db.session.add(new_comment)
+        db.session.commit()
+
+        recipe = data.get('dish')
+        comment = {
+            'username': username,
+            'content': new_comment.content,
+            'date': new_comment.date_created
+        }
+        if recipe.get('comments'):
+            recipe['comments'].append(comment)
+        else:
+            comments_data=[]
+            comments_data.append(comment)
+            recipe.update({
+                'comments': comments_data
+            })
+
+        return make_response(jsonify(recipe),200)
 
 # Views go here!
 api.add_resource(SignupResource, '/signup')
 api.add_resource(LoginResource, '/login')
 api.add_resource(LogoutResource, '/logout')
 api.add_resource(CheckLoginResource, '/checklogin')
-# api.add_resource(DishDetailResource, '/dishdetail/<int:dish_id>')
 api.add_resource(UserProfileResource, '/userprofile')
 api.add_resource(AllDishesRecipes, '/user/dishes')
+api.add_resource(PublicAllDishes, '/user/publicfeed')
+api.add_resource(DeleteRecipe, '/user/delete_recipe')
+api.add_resource(AddComment, '/user/dish/comments')
 
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
 
-class DishDetailResource(Resource):
+# class DishDetailResource(Resource):
 #     def get(self, dish_id):
 #         dish = Dish.query.get(dish_id)
 #         if not dish:
