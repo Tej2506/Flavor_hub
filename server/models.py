@@ -1,13 +1,23 @@
+from sqlalchemy import Table, Column, Integer, ForeignKey, String
 from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.ext.associationproxy import association_proxy
 from config import db, bcrypt
+from datetime import datetime
 
 
 # Models go here!
+dish_tags = Table(
+    'dish_tags',
+    db.Model.metadata,
+    Column('dish_id', Integer, ForeignKey('dishes.id')),
+    Column('tag_id', Integer, ForeignKey('tags.id'))
+)
 
 
 # User model
 class User(db.Model, SerializerMixin):
+    __tablename__ = 'users'
+
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, unique=True, nullable=False)
     _password_hash = db.Column(db.String, nullable=False)
@@ -70,11 +80,9 @@ class Recipe(db.Model, SerializerMixin):
     dish_id = db.Column(db.Integer, db.ForeignKey('dishes.id'), nullable=False)
 
     # Relationships
-    comments = db.relationship("Comment", backref="recipe", lazy=True)
-    ratings = db.relationship("Rating", backref="recipe", lazy=True)
+    comments = db.relationship("Comment", backref="recipe", lazy=True, cascade="all, delete-orphan")
+    ratings = db.relationship("Rating", backref="recipe", lazy=True, cascade = "all, delete-orphan")
     
-    # Association Proxy
-    dish_name = association_proxy("dish", "name")  # Access dish name directly
 
     def __repr__(self):
         return f"<Recipe by User {self.user_id} for Dish {self.dish_id}>"
@@ -115,16 +123,10 @@ class Tag(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(), unique=True, nullable=False)
 
-    # Relationship with Dish
-    dishes = db.relationship("Dish", secondary=dish_tags, backref="tags")
+   
 
     def __repr__(self):
         return f"<Tag {self.name}>"
 
-dish_tags = Table(
-    'dish_tags',
-    db.Model.metadata,
-    Column('dish_id', Integer, ForeignKey('dishes.id')),
-    Column('tag_id', Integer, ForeignKey('tags.id'))
-)
+
 
