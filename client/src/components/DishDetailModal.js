@@ -1,22 +1,170 @@
-import React from 'react';
 
-function DishDetailModal({ dish, onClose }) {
+import React, { useState } from 'react';
+
+function DishDetailModal({ dish, onClose, dishes, setDishes }) {
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedDish, setEditedDish] = useState({
+        id: dish.id,
+        dish_name: dish.dish_name,
+        image_url: dish.image_url,
+        date_created: dish.date_created,
+        description: dish.description,
+        ingredients: dish.ingredients,
+        instructions: dish.instructions,
+        tags: dish.tags || []
+    });
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setEditedDish({ ...editedDish, [name]: value });
+    };
+
+    const handleSave = () => {
+        const updatedDishes = dishes.map((d) => 
+            d.id === editedDish.id ? { ...d, ...editedDish } : d
+        );
+        setDishes(updatedDishes);
+        setIsEditing(false);
+        fetch('http://127.0.0.1:5000/user/dishes', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(editedDish),
+            credentials: 'include'
+        })
+        .then(response => {
+            if (response.status === 200) {
+                return response.json().then(data => alert(data['message']));
+            } else {
+                alert("Error editing recipe");
+            }
+        })
+        .catch(error => console.error('Error updating recipe:', error));
+        
+        
+    };
+
+    function handleDelete(id) {
+        onClose()
+        fetch('http://127.0.0.1:5000/user/delete_recipe', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({recipe_id: id }),
+            credentials: 'include'
+        })
+        .then((res) => {
+            if (res.status === 200) {
+                const new_recipe_list = dishes.filter(dish => dish.id !== id);
+                setDishes(new_recipe_list);
+                return res.json().then((data) => {
+                    alert("Tile deleted successfully: " + data['name']);
+                });
+            } else {
+                alert("Error deleting tile");
+            }
+        })
+        .catch(error => console.error("Error:", error));
+    }
+    
+
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                <img src={dish.image_url} alt={dish.name} className="full-image" />
-                <h2>{dish.name}</h2>
-                <p><strong>Date Created:</strong> {new Date(dish.date_created).toLocaleString()}</p>
-                <p><strong>Ingredients:</strong> {dish.ingredients}</p>
-                <p><strong>Instructions:</strong> {dish.instructions}</p>
-                <p><strong>Tags:</strong> {dish.tags && dish.tags.join(', ')}</p>
+            <div className="modal-content" tile_id={dish.id} onClick={(e) => e.stopPropagation()}>
+                {isEditing ? (
+                    <div>
+                        <input
+                            type="text"
+                            name="name"
+                            value={editedDish.dish_name}
+                            onChange={handleInputChange}
+                            className="full-image"
+                        />
+                        <input
+                            type="text"
+                            name="image_url"
+                            value={editedDish.image_url}
+                            onChange={handleInputChange}
+                        />
+                    </div>
+                ) : (
+                    <div>
+                        <img src={editedDish.image_url} alt={editedDish.name} className="full-image" />
+                        <h2>{editedDish.name}</h2>
+                    </div>
+                )}
+                
+                <p><strong>Date Created:</strong> {new Date(editedDish.date_created).toLocaleString()}</p>
+
                 <div>
-                    <h3>Comments</h3>
+                    <strong>Description:</strong>
+                    {isEditing ? (
+                        <textarea
+                            name="description"
+                            value={editedDish.description}
+                            onChange={handleInputChange}
+                        />
+                    ) : (
+                        <p>{editedDish.description}</p>
+                    )}
+                </div>
+
+                <div>
+                    <strong>Ingredients:</strong>
+                    {isEditing ? (
+                        <textarea
+                            name="ingredients"
+                            value={editedDish.ingredients}
+                            onChange={handleInputChange}
+                        />
+                    ) : (
+                        <p>{editedDish.ingredients}</p>
+                    )}
+                </div>
+
+                <div>
+                    <strong>Instructions:</strong>
+                    {isEditing ? (
+                        <textarea
+                            name="instructions"
+                            value={editedDish.instructions}
+                            onChange={handleInputChange}
+                        />
+                    ) : (
+                        <p>{editedDish.instructions}</p>
+                    )}
+                </div>
+
+                <div>
+                    <strong>Tags:</strong>
+                    {isEditing ? (
+                        <input
+                            type="text"
+                            name="tags"
+                            value={editedDish.tags.join(', ')}
+                            onChange={(e) => handleInputChange({ target: { name: 'tags', value: e.target.value.split(', ') } })}
+                        />
+                    ) : (
+                        <p>{editedDish.tags.join(', ')}</p>
+                    )}
+                </div>
+
+                <div>
+                    <>{dish.comments && <h3>Comments</h3>}</>
                     {dish.comments && dish.comments.map((comment, index) => (
                         <p key={index}><strong>{comment.username}:</strong> {comment.content}</p>
                     ))}
                 </div>
+
+                {isEditing ? (
+                    <button onClick={handleSave}>Save</button>
+                ) : (
+                    <button onClick={() => setIsEditing(true)}>Edit</button>
+                )}
                 <button onClick={onClose}>Close</button>
+                <button onClick={()=>handleDelete(editedDish.id)}>Delete Recipe</button>
             </div>
         </div>
     );

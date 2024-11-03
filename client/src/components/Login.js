@@ -27,7 +27,7 @@ const Login = () => {
           if (res.ok) {
             if (res.status === 200) {
               return res.json().then((data) => {
-                history.push(`/UserProfile/${data.user_id}`);
+                history.push(`/userprofile`);
               });
             } else if (res.status === 201 || res.status === 202) {
               return res.json().then((data) => {

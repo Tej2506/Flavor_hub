@@ -1,26 +1,27 @@
 import React, { useState } from 'react';
 import DishDetailModal from './DishDetailModal';
 
-function DishTile({ dish }) {
-    const [isModalOpen, setIsModalOpen] = useState(false);
+function TileGallery({ dishes, setDishes }) {
+    const [selectedDish, setSelectedDish] = useState(null)
 
     // Handlers to open and close the modal
-    const openModal = () => setIsModalOpen(true);
-    const closeModal = () => setIsModalOpen(false);
+    const openModal = (dish) => setSelectedDish(dish);
+    const closeModal = () => setSelectedDish(null);
 
     return (
         <div>
-            {/* Thumbnail Tile */}
-            <div className="dish-tile" onClick={openModal}>
-                <img src={dish.image_url} alt={dish.name} className="thumbnail" />
-                <h4>{dish.name}</h4>
-                <p>{new Date(dish.date_created).toLocaleDateString()}</p>
-            </div>
-
-            {/* Modal for Full Dish Details */}
-            {isModalOpen && <DishDetailModal dish={dish} onClose={closeModal} />}
+            {dishes.map(dish => (
+                <div key={dish.id} className="dish-tile" onClick={()=>openModal(dish)}>
+                    <img src={dish.image_url} alt={dish.name} className="thumbnail" />
+                    <h4>{dish.dish_name}</h4>
+                    <p>{new Date(dish.date_created).toLocaleDateString()}</p>
+    
+                    {selectedDish && <DishDetailModal key ={dish.id} dish={dish} onClose={closeModal} dishes={dishes} setDishes={setDishes} />}
+                </div>
+            ))}
         </div>
     );
+    
 }
 
-export default DishTile;
+export default TileGallery;

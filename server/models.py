@@ -87,7 +87,7 @@ class Recipe(db.Model, SerializerMixin):
     def __repr__(self):
         return f"<Recipe by User {self.user_id} for Dish {self.dish_id}>"
 
-### 4. Comment Model
+
 class Comment(db.Model, SerializerMixin):
     __tablename__ = 'comments'
 
@@ -102,7 +102,7 @@ class Comment(db.Model, SerializerMixin):
     def __repr__(self):
         return f"<Comment by User {self.user_id} on Recipe {self.recipe_id}>"
 
-### 5. Rating Model
+
 class Rating(db.Model, SerializerMixin):
     __tablename__ = 'ratings'
 
@@ -116,7 +116,7 @@ class Rating(db.Model, SerializerMixin):
     def __repr__(self):
         return f"<Rating {self.score} by User {self.user_id} on Recipe {self.recipe_id}>"
 
-### 6. Tag Model
+
 class Tag(db.Model, SerializerMixin):
     __tablename__ = 'tags'
 
