@@ -1,17 +1,17 @@
 
 import React, { useState } from 'react';
 
-function DishDetailModal({ dish, onClose, dishes, setDishes }) {
+function DishDetailModal({ dish, closeModal, dishes, setDishes }) {
     const [isEditing, setIsEditing] = useState(false);
     const [editedDish, setEditedDish] = useState({
         id: dish.id,
-        dish_name: dish.dish_name,
+        name: dish.dish_name,
         image_url: dish.image_url,
         date_created: dish.date_created,
         description: dish.description,
         ingredients: dish.ingredients,
         instructions: dish.instructions,
-        tags: dish.tags || []
+        servings: dish.servings
     });
 
     const handleInputChange = (e) => {
@@ -46,7 +46,7 @@ function DishDetailModal({ dish, onClose, dishes, setDishes }) {
     };
 
     function handleDelete(id) {
-        onClose()
+        closeModal()
         fetch('http://127.0.0.1:5000/user/delete_recipe', {
             method: 'POST',
             headers: {
@@ -68,10 +68,12 @@ function DishDetailModal({ dish, onClose, dishes, setDishes }) {
         })
         .catch(error => console.error("Error:", error));
     }
+
+    
     
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-overlay" onClick={closeModal}>
             <div className="modal-content" tile_id={dish.id} onClick={(e) => e.stopPropagation()}>
                 {isEditing ? (
                     <div>
@@ -138,16 +140,16 @@ function DishDetailModal({ dish, onClose, dishes, setDishes }) {
                 </div>
 
                 <div>
-                    <strong>Tags:</strong>
+                    <strong>Servings:</strong>
                     {isEditing ? (
                         <input
                             type="text"
-                            name="tags"
-                            value={editedDish.tags.join(', ')}
-                            onChange={(e) => handleInputChange({ target: { name: 'tags', value: e.target.value.split(', ') } })}
+                            name="servings"
+                            value={editedDish.servings}
+                            onChange={handleInputChange}
                         />
                     ) : (
-                        <p>{editedDish.tags.join(', ')}</p>
+                        <p>{editedDish.servings}</p>
                     )}
                 </div>
 
@@ -163,7 +165,7 @@ function DishDetailModal({ dish, onClose, dishes, setDishes }) {
                 ) : (
                     <button onClick={() => setIsEditing(true)}>Edit</button>
                 )}
-                <button onClick={onClose}>Close</button>
+                <button onClick={closeModal}>Close</button>
                 <button onClick={()=>handleDelete(editedDish.id)}>Delete Recipe</button>
             </div>
         </div>

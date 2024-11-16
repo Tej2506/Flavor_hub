@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function PublicFeedModal({ dish, onClose, setDishes }) {
+function PublicFeedModal({ username, dish, closeModal, dishes, setDishes }) {
     const [isEditing, setIsEditing] = useState(false)
     const [comment, setComment] = useState('')
 
@@ -12,33 +12,37 @@ function PublicFeedModal({ dish, onClose, setDishes }) {
         setComment(comment_content);
     };
 
-    function handleSaveComment(){
-        setIsEditing(false)
-
+    function handleSaveComment() {
+        setIsEditing(false);
+    
         fetch('http://127.0.0.1:5000/user/dish/comments', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({'comment':comment,'recipe_id':dish.id, ...dish}),
+            body: JSON.stringify({ comment, recipe_id: dish.id }),
             credentials: 'include'
         })
-        .then(response => {
-            if (response.status === 200) {
-                return response.json().then(data => setDishes(...dish,data));
-            } else {
-                alert("Error adding comment"+ response.status);
-            }
-        })
-        .catch(error => console.error('Error adding  comment:', error));
-
+            .then(response => {
+                if (response.status === 200) {
+                    return response.json().then(data => {
+                        // Update the dishes array with the new dish data
+                        const updatedDishes = dishes.map(d =>
+                            d.id === dish.id ? data : d
+                        );
+                        setDishes(updatedDishes);
+                        window.location.reload()
+                    });
+                } else {
+                    alert("Error adding comment: " + response.status);
+                }
+            })
+            .catch(error => console.error('Error adding comment:', error));
     }
-    
-    
     
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-overlay" onClick={closeModal}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                 <img src={dish.image_url} alt={dish.dish_name} className="full-image" />
                 <h2>{dish.dish_name}</h2>
@@ -46,7 +50,7 @@ function PublicFeedModal({ dish, onClose, setDishes }) {
                 <p><strong>Description:</strong> {dish.description}</p>
                 <p><strong>Ingredients:</strong> {dish.ingredients}</p>
                 <p><strong>Instructions:</strong> {dish.instructions}</p>
-                <p><strong>Tags:</strong> {dish.tags && dish.tags.join(', ')}</p>
+                <p><strong>Servings:</strong> {dish.servings}</p>
                 
                 <div>
                     {isEditing ? (
@@ -64,12 +68,12 @@ function PublicFeedModal({ dish, onClose, setDishes }) {
                     <div>
                         <h3>Comments</h3>
                         {dish.comments && dish.comments.map((comment, index) => (
-                            <p key={index}><strong>{comment.username}:</strong> {comment.content}</p>
+                            <p key={index}><strong>{comment.username}:</strong> {comment.content}: {new Date(comment.date_created).toLocaleString()}</p>
                         ))}
                     </div>
                     )}
                 </div>
-                <button onClick={onClose}>Close</button>
+                <button onClick={closeModal}>Close</button>
                 <button onClick={()=>handleAddComment(dish.id)}>Add Comment</button>
             </div>
         </div>

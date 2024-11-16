@@ -5,6 +5,7 @@ import PublicTileGallery from './PublicTileGallery';
 function PublicFeed() {
     const [dishes, setDishes] = useState([]);
     const [message, setMessage] = useState('')
+    const[username, setUsername] = useState('')
     const history = useHistory()
 
     useEffect(() => {
@@ -12,7 +13,9 @@ function PublicFeed() {
         .then(res => {
             if (res.status === 200) {
                 res.json()
-                    .then(data => setDishes(data));
+                    .then(data => {
+                        setUsername(data['username'])
+                        setDishes(data)});
             } else {
                 res.json()
                     .then(response => setMessage(response['message']));
@@ -25,7 +28,7 @@ function PublicFeed() {
         <div className="public-feed">
             <button onClick={()=>history.push('/userprofile')}>Profile</button>
             {dishes.length > 0 ? (
-                <PublicTileGallery dishes = {dishes} />
+                <PublicTileGallery username={username} dishes = {dishes} setDishes={setDishes} />
             ) : (
                 <p>{message}</p>
             )}

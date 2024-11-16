@@ -4,6 +4,7 @@
 # Remote library imports
 from flask import Flask, request, jsonify, make_response, session
 from flask_restful import Resource
+from datetime import datetime
 import requests
 import os
 
@@ -121,7 +122,7 @@ class AllDishesRecipes(Resource):
                 all_recipes.append(recipe_data)
             return make_response(jsonify(all_recipes), 200)
         
-        return make_response({'message':'Please add your recipes'},201)
+        return make_response({'message':'Start your journey by adding Recipes!!!'},201)
 
     def post(self):
         user_id = session.get('user_id')
@@ -163,7 +164,7 @@ class AllDishesRecipes(Resource):
 
         else:
             dish = Dish(
-                name = data.get('name'),
+                name = data.get('dish_name'),
                 description = data.get('description')
                 )
             db.session.add(dish)
@@ -230,7 +231,8 @@ class PublicAllDishes(Resource):
         print("public feed user_id:",user_id)
         if not user_id:
             return make_response({'message': 'User not logged in'}, 401)
-        
+
+        user = User.query.filter_by(id=user_id).first()
         recipes = Recipe.query.filter((Recipe.user_id != user_id) & (Recipe.public == True)).all()
 
         if recipes:
@@ -241,13 +243,14 @@ class PublicAllDishes(Resource):
                     {
                         'username': comment.user.username,
                         'content': comment.content,
-                        'date': comment.date_created
+                        'date_created': comment.date_created
                     }
                     for comment in comments
                 ]
 
                 recipe_data = {
                 'id': recipe.id,
+                'username':recipe.user.username,
                 'ingredients': recipe.ingredients,
                 'instructions': recipe.instructions,
                 'cooking_time': recipe.cooking_time,
@@ -262,6 +265,7 @@ class PublicAllDishes(Resource):
                 })
 
                 all_recipes.append(recipe_data)
+            all_recipes.append({'username': user.username})
 
             return make_response(jsonify(all_recipes), 200)
         
@@ -274,31 +278,49 @@ class AddComment(Resource):
             return make_response({'message':'User not logged in'},404)
 
         data = request.get_json()
+
         username = User.query.filter_by(id = user_id).first().username
-        new_comment = Comment(
-            user_id = user_id,
-            recipe_id = data.get('recipe_id'),
-            content = data.get('comment')
-        )
-        db.session.add(new_comment)
-        db.session.commit()
+        comment = Comment.query.filter((Comment.user_id == user_id) & (Comment.recipe_id == data.get('recipe_id'))).first()
 
-        recipe = data.get('dish')
-        comment = {
-            'username': username,
-            'content': new_comment.content,
-            'date': new_comment.date_created
-        }
-        if recipe.get('comments'):
-            recipe['comments'].append(comment)
+        if comment:
+            print("in if condition of comment")
+            setattr(comment, 'content', data.get('comment'))
+            setattr(comment, 'date_created', datetime.utcnow())
+            db.session.commit()
         else:
-            comments_data=[]
-            comments_data.append(comment)
-            recipe.update({
-                'comments': comments_data
-            })
+            new_comment = Comment(
+                user_id = user_id,
+                recipe_id = data.get('recipe_id'),
+                content = data.get('comment')
+            )
+            db.session.add(new_comment)
+            db.session.commit()
 
-        return make_response(jsonify(recipe),200)
+        comments = Comment.query.filter_by(recipe_id=data.get('recipe_id')).all()
+        comment_data = []
+        for c in comments:
+            comment = {
+                'username': User.query.filter_by(id = c.user_id).first().username,
+                'content' : c.content,
+                'date_created': c.date_created
+            }
+            comment_data.append(comment)
+
+        recipe = Recipe.query.filter_by(id=data.get('recipe_id')).first()
+        recipe_data = {
+            'id': recipe.id,
+            'ingredients': recipe.ingredients,
+            'instructions': recipe.instructions,
+            'cooking_time': recipe.cooking_time,
+            'servings': recipe.servings,
+            'image_url': recipe.image_url,
+            'date_created': recipe.date_created,
+            'dish_name': recipe.dish.name,
+            'description': recipe.dish.description,
+            'comments': comment_data
+            }
+
+        return make_response(jsonify(recipe_data),200)
 
 # Views go here!
 api.add_resource(SignupResource, '/signup')

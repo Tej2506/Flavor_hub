@@ -1,5 +1,4 @@
-// Login.js
-import React from 'react';
+// import React from 'react';
 import { useFormik } from 'formik';
 import { useHistory } from 'react-router-dom';
 import { useState } from 'react';
@@ -49,7 +48,7 @@ const Login = () => {
   });
 
   return (
-    <div>
+    <div className="login-signup-container">
       <h2>Login</h2>
       <form onSubmit={formik.handleSubmit}>
         <input
