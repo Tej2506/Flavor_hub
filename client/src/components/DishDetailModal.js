@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 
 function DishDetailModal({ dish, closeModal, dishes, setDishes }) {
@@ -11,7 +10,8 @@ function DishDetailModal({ dish, closeModal, dishes, setDishes }) {
         description: dish.description,
         ingredients: dish.ingredients,
         instructions: dish.instructions,
-        servings: dish.servings
+        servings: dish.servings,
+        comments: dish.comments
     });
 
     const handleInputChange = (e) => {
@@ -20,7 +20,7 @@ function DishDetailModal({ dish, closeModal, dishes, setDishes }) {
     };
 
     const handleSave = () => {
-        const updatedDishes = dishes.map((d) => 
+        const updatedDishes = dishes.map((d) =>
             d.id === editedDish.id ? { ...d, ...editedDish } : d
         );
         setDishes(updatedDishes);
@@ -33,140 +33,147 @@ function DishDetailModal({ dish, closeModal, dishes, setDishes }) {
             body: JSON.stringify(editedDish),
             credentials: 'include'
         })
-        .then(response => {
-            if (response.status === 200) {
-                return response.json().then(data => alert(data['message']));
-            } else {
-                alert("Error editing recipe");
-            }
-        })
-        .catch(error => console.error('Error updating recipe:', error));
-        
-        
+            .then(response => {
+                if (response.status === 200) {
+                    return response.json().then(data => alert(data['message']));
+                } else {
+                    alert("Error editing recipe");
+                }
+            })
+            .catch(error => console.error('Error updating recipe:', error));
     };
 
-    function handleDelete(id) {
-        closeModal()
+    const handleDelete = (id) => {
+        closeModal();
         fetch('http://127.0.0.1:5000/user/delete_recipe', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({recipe_id: id }),
+            body: JSON.stringify({ recipe_id: id }),
             credentials: 'include'
         })
-        .then((res) => {
-            if (res.status === 200) {
-                const new_recipe_list = dishes.filter(dish => dish.id !== id);
-                setDishes(new_recipe_list);
-                return res.json().then((data) => {
-                    alert("Tile deleted successfully: " + data['name']);
-                });
-            } else {
-                alert("Error deleting tile");
-            }
-        })
-        .catch(error => console.error("Error:", error));
-    }
-
-    
-    
+            .then((res) => {
+                if (res.status === 200) {
+                    const newRecipeList = dishes.filter(dish => dish.id !== id);
+                    setDishes(newRecipeList);
+                    return res.json().then((data) => {
+                        alert("Recipe deleted successfully: " + data['name']);
+                    });
+                } else {
+                    alert("Error deleting recipe");
+                }
+            })
+            .catch(error => console.error("Error:", error));
+    };
 
     return (
         <div className="modal-overlay" onClick={closeModal}>
-            <div className="modal-content" tile_id={dish.id} onClick={(e) => e.stopPropagation()}>
-                {isEditing ? (
-                    <div>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                    <h2>{isEditing ? (
                         <input
                             type="text"
                             name="name"
-                            value={editedDish.dish_name}
+                            value={editedDish.name}
                             onChange={handleInputChange}
-                            className="full-image"
+                            className="modal-input"
                         />
-                        <input
-                            type="text"
-                            name="image_url"
-                            value={editedDish.image_url}
-                            onChange={handleInputChange}
-                        />
+                    ) : (
+                        editedDish.name
+                    )}</h2>
+                </div>
+
+                <div className="modal-body">
+                    <img src={editedDish.image_url} alt={editedDish.name} className="modal-image" />
+
+                    <div className="detail-section">
+                        <strong>Date Created:</strong>
+                        <p>{new Date(editedDish.date_created).toLocaleString()}</p>
                     </div>
-                ) : (
-                    <div>
-                        <img src={editedDish.image_url} alt={editedDish.name} className="full-image" />
-                        <h2>{editedDish.name}</h2>
+
+                    <div className="detail-section">
+                        <strong>Description:</strong>
+                        {isEditing ? (
+                            <textarea
+                                name="description"
+                                value={editedDish.description}
+                                onChange={handleInputChange}
+                                className="modal-textarea"
+                            />
+                        ) : (
+                            <p>{editedDish.description}</p>
+                        )}
                     </div>
-                )}
-                
-                <p><strong>Date Created:</strong> {new Date(editedDish.date_created).toLocaleString()}</p>
 
-                <div>
-                    <strong>Description:</strong>
+                    <div className="detail-section">
+                        <strong>Ingredients:</strong>
+                        {isEditing ? (
+                            <textarea
+                                name="ingredients"
+                                value={editedDish.ingredients}
+                                onChange={handleInputChange}
+                                className="modal-textarea"
+                            />
+                        ) : (
+                            <p>{editedDish.ingredients}</p>
+                        )}
+                    </div>
+
+                    <div className="detail-section">
+                        <strong>Instructions:</strong>
+                        {isEditing ? (
+                            <textarea
+                                name="instructions"
+                                value={editedDish.instructions}
+                                onChange={handleInputChange}
+                                className="modal-textarea"
+                            />
+                        ) : (
+                            <p>{editedDish.instructions}</p>
+                        )}
+                    </div>
+
+                    <div className="detail-section">
+                        <strong>Servings:</strong>
+                        {isEditing ? (
+                            <input
+                                type="number"
+                                name="servings"
+                                value={editedDish.servings}
+                                onChange={handleInputChange}
+                                className="modal-input"
+                            />
+                        ) : (
+                            <p>{editedDish.servings}</p>
+                        )}
+                    </div>
+
+                    <div className="detail-section">
+                        <strong>Comments:</strong>
+                        {editedDish.comments && editedDish.comments.length > 0 ? (
+                            <ul className="comments-list">
+                                {editedDish.comments.map((comment, index) => (
+                                    <li key={index} className="comment-item">
+                                        <strong>{comment.username}:</strong> {comment.content}
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p>No comments yet.</p>
+                        )}
+                    </div>
+                </div>
+
+                <div className="modal-footer">
                     {isEditing ? (
-                        <textarea
-                            name="description"
-                            value={editedDish.description}
-                            onChange={handleInputChange}
-                        />
+                        <button className="save-button" onClick={handleSave}>Save</button>
                     ) : (
-                        <p>{editedDish.description}</p>
+                        <button className="edit-button" onClick={() => setIsEditing(true)}>Edit</button>
                     )}
+                    <button className="close-button" onClick={closeModal}>Close</button>
+                    <button className="delete-button" onClick={() => handleDelete(editedDish.id)}>Delete</button>
                 </div>
-
-                <div>
-                    <strong>Ingredients:</strong>
-                    {isEditing ? (
-                        <textarea
-                            name="ingredients"
-                            value={editedDish.ingredients}
-                            onChange={handleInputChange}
-                        />
-                    ) : (
-                        <p>{editedDish.ingredients}</p>
-                    )}
-                </div>
-
-                <div>
-                    <strong>Instructions:</strong>
-                    {isEditing ? (
-                        <textarea
-                            name="instructions"
-                            value={editedDish.instructions}
-                            onChange={handleInputChange}
-                        />
-                    ) : (
-                        <p>{editedDish.instructions}</p>
-                    )}
-                </div>
-
-                <div>
-                    <strong>Servings:</strong>
-                    {isEditing ? (
-                        <input
-                            type="text"
-                            name="servings"
-                            value={editedDish.servings}
-                            onChange={handleInputChange}
-                        />
-                    ) : (
-                        <p>{editedDish.servings}</p>
-                    )}
-                </div>
-
-                <div>
-                    <>{dish.comments && <h3>Comments</h3>}</>
-                    {dish.comments && dish.comments.map((comment, index) => (
-                        <p key={index}><strong>{comment.username}:</strong> {comment.content}</p>
-                    ))}
-                </div>
-
-                {isEditing ? (
-                    <button onClick={handleSave}>Save</button>
-                ) : (
-                    <button onClick={() => setIsEditing(true)}>Edit</button>
-                )}
-                <button onClick={closeModal}>Close</button>
-                <button onClick={()=>handleDelete(editedDish.id)}>Delete Recipe</button>
             </div>
         </div>
     );
