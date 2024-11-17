@@ -185,12 +185,12 @@ body {
 
 
 
-.user-profile-header button {
+.user-profile-page button {
     display: inline-block;
     position: static;
     padding: 0.75rem 1.5rem;
     color: #fff;
-    background-color: rgba(8, 8, 8, 0.5);
+    background-color: rgba(1, 1, 1, 0.6);
     border: none;
     border-radius: 4px;
     font-size: 1.1rem;
@@ -198,7 +198,7 @@ body {
     transition: background-color 0.3s;
 }
 
-.user-profile-header button:hover {
+.user-profile-page button:hover {
     background-color: #af208b;
     transform: scale(1.05);
 }
@@ -229,7 +229,6 @@ body {
 }
 
 .checkbox-container label {
-    
     font-size: 1.5rem;
     color: white;
 }
@@ -394,5 +393,65 @@ body {
 .public-feed button:hover {
     background-color: #af208b;
     transform: scale(1.05);
+}
+
+.feedback-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-image: url('https://png.pngtree.com/background/20231101/original/pngtree-3d-rendered-interface-for-a-homemade-food-app-picture-image_5830862.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    padding: 2rem;
+    color: #fff;
+    text-align: center;
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.feedback-form h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: #ffffff;
+}
+
+.feedback-form input,
+.feedback-form textarea {
+    width: 80%;
+    max-width: 500px;
+    margin: 1rem auto;
+    padding: 0.8rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.feedback-form textarea {
+    height: 150px;
+    resize: none;
+}
+
+.feedback-form button {
+    padding: 0.75rem 1.5rem;
+    color: #fff;
+    background-color: rgba(8, 8, 8, 0.5);
+    border: none;
+    border-radius: 4px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.feedback-form button:hover {
+    background-color: #af208b;
+    transform: scale(1.05);
+}
+
+.feedback-form p {
+    margin-top: 1rem;
+    font-size: 1.2rem;
 }
 

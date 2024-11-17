@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 
-function PublicFeedModal({ username, dish, closeModal, dishes, setDishes }) {
+function PublicFeedModal({ username, dish, closeModal, dishes, setDishes, setSelectedDish }) {
     const [isEditing, setIsEditing] = useState(false)
     const [comment, setComment] = useState('')
+    const[modalDish, setModalDish] = useState(dish)
 
     function handleAddComment(){
         setIsEditing(true)
@@ -13,7 +14,7 @@ function PublicFeedModal({ username, dish, closeModal, dishes, setDishes }) {
     };
 
     function handleSaveComment() {
-        setIsEditing(false);
+        setIsEditing(false)
     
         fetch('http://127.0.0.1:5000/user/dish/comments', {
             method: 'POST',
@@ -30,8 +31,8 @@ function PublicFeedModal({ username, dish, closeModal, dishes, setDishes }) {
                         const updatedDishes = dishes.map(d =>
                             d.id === dish.id ? data : d
                         );
-                        setDishes(updatedDishes);
-                        window.location.reload()
+                        setDishes(updatedDishes)
+                        setModalDish(data)
                     });
                 } else {
                     alert("Error adding comment: " + response.status);
@@ -44,13 +45,14 @@ function PublicFeedModal({ username, dish, closeModal, dishes, setDishes }) {
     return (
         <div className="modal-overlay" onClick={closeModal}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                <img src={dish.image_url} alt={dish.dish_name} className="full-image" />
+                <img src={modalDish.image_url} alt={modalDish.dish_name} className="full-image" />
                 <h2>{dish.dish_name}</h2>
-                <p><strong>Date Created:</strong> {new Date(dish.date_created).toLocaleString()}</p>
-                <p><strong>Description:</strong> {dish.description}</p>
-                <p><strong>Ingredients:</strong> {dish.ingredients}</p>
-                <p><strong>Instructions:</strong> {dish.instructions}</p>
-                <p><strong>Servings:</strong> {dish.servings}</p>
+                <p><strong>Date Created:</strong> {new Date(modalDish.date_created).toLocaleString()}</p>
+                <p><strong>Description:</strong> {modalDish.description}</p>
+                <p><strong>Ingredients:</strong> {modalDish.ingredients}</p>
+                <p><strong>Instructions:</strong> {modalDish.instructions}</p>
+                <p><strong>Cooking time:</strong> {modalDish.cooking_time} minutes</p>
+                <p><strong>Servings:</strong> {modalDish.servings}</p>
                 
                 <div>
                     {isEditing ? (
@@ -67,14 +69,14 @@ function PublicFeedModal({ username, dish, closeModal, dishes, setDishes }) {
                      : (
                     <div>
                         <h3>Comments</h3>
-                        {dish.comments && dish.comments.map((comment, index) => (
+                        {modalDish.comments && modalDish.comments.map((comment, index) => (
                             <p key={index}><strong>{comment.username}:</strong> {comment.content}: {new Date(comment.date_created).toLocaleString()}</p>
                         ))}
                     </div>
                     )}
                 </div>
                 <button onClick={closeModal}>Close</button>
-                <button onClick={()=>handleAddComment(dish.id)}>Add Comment</button>
+                <button onClick={()=>handleAddComment(modalDish.id)}>Add Comment</button>
             </div>
         </div>
     );

@@ -12,6 +12,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from sqlalchemy import MetaData
 from dotenv import load_dotenv
+from flask_mail import Mail
 
 
 # Local imports
@@ -25,6 +26,14 @@ app.json.compact = False
 app.config['SESSION_COOKIE_SAMESITE'] = 'None'
 app.config['SESSION_COOKIE_SECURE'] = True 
 
+# Email configuration
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'tejbasavanna90@gmail.com'  # Your Gmail address
+app.config['MAIL_PASSWORD'] = 'xkbw swrw yhzn tzyi'  # Replace with the app password
+app.config['MAIL_DEFAULT_SENDER'] = 'tejbasavanna90@gmail.com'
+
 load_dotenv()
 # Define metadata, instantiate db
 metadata = MetaData(naming_convention={
@@ -37,6 +46,9 @@ db.init_app(app)
 # Instantiate REST API
 api = Api(app)
 
+
 # Instantiate CORS
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
 bcrypt = Bcrypt(app) 
+
+mail = Mail(app)

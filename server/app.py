@@ -5,11 +5,12 @@
 from flask import Flask, request, jsonify, make_response, session
 from flask_restful import Resource
 from datetime import datetime
+from flask_mail import Message
 import requests
 import os
 
 # Local imports
-from config import app, db, api, bcrypt, CORS  # bcrypt imported from config
+from config import app, db, api, bcrypt, CORS, mail  # bcrypt imported from config
 from models import User, Dish, Recipe, Tag, Comment, Rating  # Import your models
 
 # Views go here!
@@ -309,6 +310,7 @@ class AddComment(Resource):
         recipe = Recipe.query.filter_by(id=data.get('recipe_id')).first()
         recipe_data = {
             'id': recipe.id,
+            'username':recipe.user.username,
             'ingredients': recipe.ingredients,
             'instructions': recipe.instructions,
             'cooking_time': recipe.cooking_time,
@@ -321,6 +323,36 @@ class AddComment(Resource):
             }
 
         return make_response(jsonify(recipe_data),200)
+    
+
+class SendFeedback(Resource):
+    def post(self):
+        data = request.get_json()
+        user_id = session.get('user_id')
+        if not user_id:
+            return make_response({'error': "User not logged in"}, 404)
+
+        user_email = data.get('email')
+        feedback = data.get('feedback')
+
+        if not user_email or not feedback:
+            return make_response({'message': 'Email and feedback are required'}, 400)
+
+        # Prepare the email
+        msg = Message(
+            subject='Website Feedback - FlavorHub',
+            sender=app.config['MAIL_USERNAME'],
+            recipients=['tejbasavanna90@gmail.com'], 
+            body=f"Feedback from {user_email}:\n\n{feedback}"
+        )
+
+        try:
+            # Send the email
+            mail.send(msg)
+            return make_response({'message': 'Feedback sent successfully'}, 200)
+        except Exception as e:
+            print(f"Error while sending feedback: {e}")
+            return make_response({'message': 'Failed to send feedback', 'error': str(e)}, 500)
 
 # Views go here!
 api.add_resource(SignupResource, '/signup')
@@ -332,7 +364,7 @@ api.add_resource(AllDishesRecipes, '/user/dishes')
 api.add_resource(PublicAllDishes, '/user/publicfeed')
 api.add_resource(DeleteRecipe, '/user/delete_recipe')
 api.add_resource(AddComment, '/user/dish/comments')
-
+api.add_resource(SendFeedback,'/send-feedback')
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)

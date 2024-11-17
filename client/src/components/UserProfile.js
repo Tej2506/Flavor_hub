@@ -44,6 +44,10 @@ function UserProfile() {
           });
     }
 
+    function submitFeedback(){
+      history.push('/user/feedback')
+    }
+
     return (
         <div className="user-profile-page">
             {user && (
@@ -58,6 +62,7 @@ function UserProfile() {
             {message && <p>{message}</p>}
             <RecipeForm dishes={dishes} setDishes={setDishes} />
             <TileGallery dishes={dishes} setDishes={setDishes} />
+            <button onClick={submitFeedback}>Send Feedback</button>
         </div>
     )
 }
