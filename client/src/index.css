@@ -100,7 +100,6 @@ body {
 
 
 .login-signup-container {
-    text-align: center;
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -119,7 +118,6 @@ body {
 
 .login-signup-container input {
     display: block;
-    padding: 0.8rem;
     margin-bottom: 1rem;
     border: 1px solid #ccc;
     border-radius: 4px;
