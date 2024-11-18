@@ -8,9 +8,9 @@ function PublicTileGallery({ username, dishes, setDishes }) {
     const closeModal = () => setSelectedDish(null);
 
     return (
-        <div>
+        <div  className="tile-gallery">
             {dishes.map(dish => (
-                <div key={dish.id} className="public-feed-tile" onClick={()=>openModal(dish)}>
+                <div key={dish.id} className="dish-tile" onClick={()=>openModal(dish)}>
                     <img src={dish.image_url} alt={dish.dish_name} className="thumbnail" />
                     <h4>{dish.username}:{dish.dish_name}</h4>
                     <p>{new Date(dish.date_created).toLocaleDateString()}</p>

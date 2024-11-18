@@ -41,6 +41,7 @@ const RecipeForm = ({ dishes, setDishes }) => {
                         setDishes([...dishes, data]);
                         setRecipeName(values['dish_name']);
                         alert("Added recipe successfully: " + recipeName);
+                        window.location.reload()
                     });
                 } else {
                     alert("Error adding recipe");

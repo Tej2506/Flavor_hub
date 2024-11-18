@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function PublicFeedModal({ username, dish, closeModal, dishes, setDishes, setSelectedDish }) {
+function PublicFeedModal({ username, dish, closeModal, dishes, setDishes }) {
     const [isEditing, setIsEditing] = useState(false)
     const [comment, setComment] = useState('')
     const[modalDish, setModalDish] = useState(dish)
@@ -47,13 +47,15 @@ function PublicFeedModal({ username, dish, closeModal, dishes, setDishes, setSel
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                 <img src={modalDish.image_url} alt={modalDish.dish_name} className="full-image" />
                 <h2>{dish.dish_name}</h2>
-                <p><strong>Date Created:</strong> {new Date(modalDish.date_created).toLocaleString()}</p>
-                <p><strong>Description:</strong> {modalDish.description}</p>
-                <p><strong>Ingredients:</strong> {modalDish.ingredients}</p>
-                <p><strong>Instructions:</strong> {modalDish.instructions}</p>
-                <p><strong>Cooking time:</strong> {modalDish.cooking_time} minutes</p>
-                <p><strong>Servings:</strong> {modalDish.servings}</p>
-                
+                <div className='detail-section'>
+                    <p><strong>Date Created:</strong> {new Date(modalDish.date_created).toLocaleString()}</p>
+                    <p><strong>Description:</strong> {modalDish.description}</p>
+                    <p><strong>Ingredients:</strong> {modalDish.ingredients}</p>
+                    <p><strong>Instructions:</strong> {modalDish.instructions}</p>
+                    <p><strong>Cooking time:</strong> {modalDish.cooking_time} minutes</p>
+                    <p><strong>Servings:</strong> {modalDish.servings}</p>
+
+                </div>
                 <div>
                     {isEditing ? (
                     <div>                        
@@ -62,21 +64,30 @@ function PublicFeedModal({ username, dish, closeModal, dishes, setDishes, setSel
                             value={comment}
                             onChange={(e)=>handleInputChange(e)}
                         />
-                        <button onClick={handleSaveComment}>Save Comment</button>
                     </div>
                     )
    
                      : (
-                    <div>
+                    <div className='detail-section'>
                         <h3>Comments</h3>
-                        {modalDish.comments && modalDish.comments.map((comment, index) => (
-                            <p key={index}><strong>{comment.username}:</strong> {comment.content}: {new Date(comment.date_created).toLocaleString()}</p>
-                        ))}
+                        <ul className="comments-list">
+                                {modalDish.comments.map((comment, index) => (
+                                    <li key={index} className="comment-item">
+                                        <strong>{comment.username}:</strong> {comment.content}
+                                    </li>
+                                ))}
+                            </ul>
                     </div>
                     )}
                 </div>
-                <button onClick={closeModal}>Close</button>
-                <button onClick={()=>handleAddComment(modalDish.id)}>Add Comment</button>
+                <div className="modal-footer">
+                    {isEditing ? (
+                        <button className="save-button" onClick={handleSaveComment}>Save Comment</button>
+                    ) : (
+                        <button className="edit-button" onClick={()=>handleAddComment(modalDish.id)}>Add Comment</button>
+                    )}
+                    <button className="close-button" onClick={closeModal}>Close</button>
+                </div>
             </div>
         </div>
     );
