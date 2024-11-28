@@ -27,7 +27,6 @@ function PublicFeedModal({ username, dish, closeModal, dishes, setDishes }) {
             .then(response => {
                 if (response.status === 200) {
                     return response.json().then(data => {
-                        // Update the dishes array with the new dish data
                         const updatedDishes = dishes.map(d =>
                             d.id === dish.id ? data : d
                         );
@@ -66,7 +65,6 @@ function PublicFeedModal({ username, dish, closeModal, dishes, setDishes }) {
                         />
                     </div>
                     )
-   
                      : (
                     <div className='detail-section'>
                         <h3>Comments</h3>
