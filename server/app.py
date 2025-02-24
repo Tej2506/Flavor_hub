@@ -13,7 +13,7 @@ import os
 from config import app, db, api, bcrypt, CORS, mail  # bcrypt imported from config
 from models import User, Dish, Recipe, Tag, Comment, Rating  # Import your models
 
-# Views go here!
+#SECRET KEY
 app.secret_key = b'\x11\x16\x83\xfee\x97\x0e\xd5Y5:FR+\xb1\\'
 
 class SignupResource(Resource):
